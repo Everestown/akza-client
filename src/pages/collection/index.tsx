@@ -9,6 +9,7 @@ import { Countdown } from '@/features/countdown-timer/ui/countdown'
 import { ProductCard } from '@/entities/product/ui/product-card'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { scrollReveal, scrollRevealScale } from '@/shared/lib/gsap'
+import { ShareButton } from '@/features/share-link/ui/share-button'
 import { ROUTES } from '@/shared/config/routes'
 
 export default function CollectionPage() {
@@ -71,9 +72,12 @@ export default function CollectionPage() {
       <section className="px-6 md:px-10 py-16 max-w-6xl mx-auto">
         <div className="ruled mb-10 flex items-center justify-between">
           <span className="section-tag py-4">Изделия коллекции</span>
-          {!productsLoading && (
-            <span className="font-mono text-[10px] text-smoke">{String((products ?? []).length).padStart(2, '0')}</span>
-          )}
+          <div className="flex items-center gap-4">
+            <ShareButton title={collection.title} />
+            {!productsLoading && (
+              <span className="font-mono text-[10px] text-smoke">{String((products ?? []).length).padStart(2, '0')}</span>
+            )}
+          </div>
         </div>
 
         {productsLoading ? (

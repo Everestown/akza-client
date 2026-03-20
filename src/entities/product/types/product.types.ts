@@ -8,6 +8,7 @@ export interface Product {
   description: string | null
   characteristics: Record<string, string>
   price: number
+  price_hidden: boolean
   cover_url: string | null
   sort_order: number
   is_published: boolean

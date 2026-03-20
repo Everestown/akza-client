@@ -1,18 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { variantsApi } from '../api/variants.api'
-import { variantKeys } from '@/shared/lib/query-keys'
 
 export function useVariant(slug: string) {
   return useQuery({
-    queryKey: variantKeys.bySlug(slug),
-    queryFn: () => variantsApi.getBySlug(slug),
-    enabled: !!slug,
+    queryKey: ['variant', slug],
+    queryFn:  () => variantsApi.getBySlug(slug),
+    enabled:  !!slug,
   })
 }
-export function useVariantsByProduct(productId: string) {
+
+export function useVariantsByProductSlug(productSlug: string) {
   return useQuery({
-    queryKey: [...variantKeys.all(), 'byProduct', productId],
-    queryFn: () => variantsApi.getByProduct(productId),
-    enabled: !!productId,
+    queryKey: ['variants', 'byProduct', productSlug],
+    queryFn:  () => variantsApi.getByProductSlug(productSlug),
+    enabled:  !!productSlug,
   })
 }

@@ -5,6 +5,6 @@ export const variantsApi = {
   getBySlug: (slug: string) =>
     api.get<{ data: Variant }>(`/variants/${slug}`).then(r => r.data.data),
 
-  getByProduct: (productId: string) =>
-    api.get<{ data: Variant[] }>(`/products/${productId}/variants`).then(r => r.data.data ?? []),
+  getByProductSlug: (productSlug: string) =>
+    api.get<{ data: Variant[] }>(`/products/${productSlug}/variants`).then(r => r.data.data ?? []),
 }
