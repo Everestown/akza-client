@@ -4,9 +4,11 @@ import { observer } from 'mobx-react-lite'
 import { useProduct } from '@/entities/product/model/use-product'
 import { useVariantsByProductSlug } from '@/entities/variant/model/use-variant'
 import { useStore } from '@/app/stores/store.context'
+import { useDictionaryValue } from '@/entities/site-page/model/use-site'
 import { SiteHeader } from '@/widgets/site-header/ui/site-header'
 import { SiteFooter } from '@/widgets/site-footer/ui/site-footer'
 import { OrderForm } from '@/widgets/order-form/ui/order-form'
+import { PageTransition } from '@/shared/ui/page-transition'
 import { ShareButton } from '@/features/share-link/ui/share-button'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Button } from '@/shared/ui/button'
@@ -15,14 +17,18 @@ import { gsap, fadeIn, scrollReveal } from '@/shared/lib/gsap'
 import { ROUTES } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/cn'
 import type { Variant } from '@/entities/variant/types/variant.types'
+import { getVariantCover, getVariantLabel } from '@/entities/variant/types/variant.types'
 
 // Full-screen lightbox for images
 function Lightbox({ images, index, onClose }: {
-  images: string[]; index: number; onClose: () => void
+  images: Array<{ url: string; media_type?: string }>; index: number; onClose: () => void
 }) {
   const [current, setCurrent] = useState(index)
-  const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length)
-  const next = () => setCurrent((c) => (c + 1) % images.length)
+  // Only navigate to IMAGE items in lightbox (skip videos)
+  const imageOnly = images.filter(i => i.media_type !== 'VIDEO')
+  const currentItem = imageOnly[current] ?? images[index]
+  const prev = () => setCurrent((c) => (c - 1 + imageOnly.length) % imageOnly.length)
+  const next = () => setCurrent((c) => (c + 1) % imageOnly.length)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -45,7 +51,7 @@ function Lightbox({ images, index, onClose }: {
           <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       </button>
-      {images.length > 1 && (
+      {imageOnly.length > 1 && (
         <>
           <button onClick={(e) => { e.stopPropagation(); prev() }}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-fog hover:text-mist p-3 z-10">
@@ -62,14 +68,14 @@ function Lightbox({ images, index, onClose }: {
         </>
       )}
       <img
-        src={images[current]}
+        src={currentItem?.url}
         alt=""
         className="max-h-screen max-w-[90vw] object-contain select-none"
         onClick={(e) => e.stopPropagation()}
       />
-      {images.length > 1 && (
+      {imageOnly.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {images.map((_, i) => (
+          {imageOnly.map((_, i) => (
             <div key={i} className={cn('w-1.5 h-1.5 rounded-full transition-colors', i === current ? 'bg-mist' : 'bg-smoke')} />
           ))}
         </div>
@@ -84,14 +90,22 @@ export default observer(function ProductPage() {
   const { data: variants = [], isLoading: vLoading } = useVariantsByProductSlug(productSlug!)
   const { orderForm } = useStore()
 
+  // Dictionary-driven copy — changes in admin CMS propagate here automatically
+  const orderCta   = useDictionaryValue('order_cta',   'Оставить заявку')
+  const orderReply = useDictionaryValue('order_reply',  'Ответим в Telegram в течение нескольких часов')
+
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
   const [activeImg, setActiveImg] = useState(0)
   const [lightboxImg, setLightboxImg] = useState<number | null>(null)
   const infoRef  = useRef<HTMLDivElement>(null)
 
   // Gallery images: selected variant images, fallback to product cover
-  const galleryImages = selectedVariant?.images.map((i) => i.url)
-    ?? (product?.cover_url ? [product.cover_url] : [])
+  // Gallery: all media from selected variant, fallback to product cover
+  const galleryMedia = selectedVariant?.images ?? []
+  const galleryImages = galleryMedia.length > 0
+    ? galleryMedia
+    : product?.cover_url ? [{ url: product.cover_url, media_type: 'IMAGE' as const, id: 0, s3_key: '', sort_order: 0, created_at: '' }]
+    : []
 
   useEffect(() => { setActiveImg(0) }, [selectedVariant])
 
@@ -135,6 +149,7 @@ export default observer(function ProductPage() {
   )
 
   return (
+    <PageTransition data-page-wrapper>
     <div className="min-h-screen bg-ink">
       <div className="grain-overlay" aria-hidden />
       <SiteHeader />
@@ -144,41 +159,55 @@ export default observer(function ProductPage() {
 
         {/* ── LEFT: Vertical gallery (60%) ─────────────────────────────── */}
         <div className="md:flex-[3] relative">
-          {/* Main image */}
           {galleryImages.length > 0 ? (
             <div
               className="md:sticky md:top-14 h-[60vw] md:h-[calc(100vh-56px)] overflow-hidden cursor-zoom-in bg-ash"
-              onClick={() => setLightboxImg(activeImg)}
+              onClick={() => galleryImages[activeImg]?.media_type !== 'VIDEO' && setLightboxImg(activeImg)}
             >
-              <img
-                src={galleryImages[activeImg]}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
-              {/* Thumb strip overlay on desktop */}
+              {galleryImages[activeImg]?.media_type === 'VIDEO' ? (
+                <video
+                  src={galleryImages[activeImg].url}
+                  className="w-full h-full object-cover"
+                  autoPlay loop muted playsInline
+                />
+              ) : (
+                <img
+                  src={galleryImages[activeImg]?.url}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                />
+              )}
+
+              {/* Thumb strip — desktop */}
               {galleryImages.length > 1 && (
                 <div className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 flex-col gap-2">
-                  {galleryImages.map((url, i) => (
+                  {galleryImages.map((item, i) => (
                     <button
                       key={i}
                       onClick={(e) => { e.stopPropagation(); setActiveImg(i) }}
                       className={cn(
-                        'w-12 h-16 overflow-hidden border-2 transition-colors',
+                        'w-12 h-16 overflow-hidden border-2 transition-colors relative',
                         i === activeImg ? 'border-mist' : 'border-transparent opacity-60 hover:opacity-100'
                       )}
                     >
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <img src={item.url} alt="" className="w-full h-full object-cover" />
+                      {item.media_type === 'VIDEO' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-ink/40">
+                          <svg className="w-4 h-4 text-mist" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
-              {/* Zoom hint */}
-              <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-1.5 text-[10px] text-fog/60 tracking-widest uppercase">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M8 2h2v2M10 2L7 5M4 10H2V8M2 10l3-3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                </svg>
-                увеличить
-              </div>
+              {galleryImages[activeImg]?.media_type !== 'VIDEO' && (
+                <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-1.5 text-[10px] text-fog/60 tracking-widest uppercase">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M8 2h2v2M10 2L7 5M4 10H2V8M2 10l3-3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                  </svg>
+                  увеличить
+                </div>
+              )}
             </div>
           ) : (
             <div className="md:sticky md:top-14 h-[60vw] md:h-[calc(100vh-56px)] bg-coal flex items-center justify-center">
@@ -186,18 +215,24 @@ export default observer(function ProductPage() {
             </div>
           )}
 
-          {/* Mobile thumbnails below main image */}
+          {/* Mobile thumbnails */}
           {galleryImages.length > 1 && (
             <div className="flex gap-2 p-4 md:hidden overflow-x-auto scrollbar-none">
-              {galleryImages.map((url, i) => (
+              {galleryImages.map((item, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
-                  className={cn('w-14 h-18 shrink-0 overflow-hidden border-2 transition-colors',
+                  className={cn('w-14 shrink-0 overflow-hidden border-2 transition-colors relative',
                     i === activeImg ? 'border-mist' : 'border-transparent opacity-60'
                   )}
+                  style={{ aspectRatio: '3/4' }}
                 >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <img src={item.url} alt="" className="w-full h-full object-cover" />
+                  {item.media_type === 'VIDEO' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-ink/40">
+                      <svg className="w-4 h-4 text-mist" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -236,28 +271,53 @@ export default observer(function ProductPage() {
             </p>
           )}
 
-          {/* Variants */}
+          {/* Variants — mini-cover + name */}
           {variants.length > 0 && (
             <div className="mb-6">
               <p className="section-tag mb-3">
-                {selectedVariant ? `Вариант: ${selectedVariant.slug}` : 'Выберите вариант'}
+                {selectedVariant
+                  ? `Вариант: ${getVariantLabel(selectedVariant)}`
+                  : 'Выберите вариант'}
               </p>
               <div className="flex flex-wrap gap-2">
-                {variants.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVariant(v)}
-                    className={cn(
-                      'variant-btn h-10 px-4 text-xs tracking-widest uppercase border transition-all duration-200',
-                      selectedVariant?.id === v.id
-                        ? 'bg-mist text-ink border-mist'
-                        : 'bg-transparent text-fog border-coal hover:border-smoke hover:text-mist'
-                    )}
-                    style={{ opacity: 0 }}
-                  >
-                    {Object.values(v.attributes).join(' · ') || v.slug}
-                  </button>
-                ))}
+                {variants.map((v) => {
+                  const cover = getVariantCover(v)
+                  const label = getVariantLabel(v)
+                  const isSelected = selectedVariant?.id === v.id
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariant(v)}
+                      className={cn(
+                        'variant-btn flex items-center gap-2 h-12 pl-1 pr-4 border transition-all duration-200',
+                        isSelected
+                          ? 'bg-mist/10 border-mist'
+                          : 'bg-transparent border-coal hover:border-smoke',
+                      )}
+                      style={{ opacity: 0 }}
+                      title={label}
+                    >
+                      {/* Mini cover */}
+                      <div className="w-10 h-10 overflow-hidden shrink-0 bg-ash">
+                        {cover
+                          ? <img src={cover.url} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center">
+                              <svg className="w-4 h-4 text-smoke" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+                                <rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                              </svg>
+                            </div>
+                        }
+                      </div>
+                      {/* Name */}
+                      <span className={cn(
+                        'text-xs tracking-wide max-w-[120px] truncate',
+                        isSelected ? 'text-mist' : 'text-fog',
+                      )}>
+                        {label}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -274,10 +334,10 @@ export default observer(function ProductPage() {
                 else if (variants.length === 0) orderForm.openFor(product.id, product.slug)
               }}
             >
-              {variants.length > 0 && !selectedVariant ? 'Выберите вариант' : 'Оставить заявку'}
+              {variants.length > 0 && !selectedVariant ? 'Выберите вариант' : orderCta}
             </Button>
             <p className="text-[11px] text-center text-fog/50 tracking-wide">
-              Ответим в Telegram в течение нескольких часов
+              {orderReply}
             </p>
           </div>
 
@@ -314,6 +374,6 @@ export default observer(function ProductPage() {
 
       <SiteFooter />
       <OrderForm />
-    </div>
+    </div></PageTransition>
   )
 })

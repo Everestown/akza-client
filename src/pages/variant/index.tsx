@@ -7,6 +7,7 @@ import { SiteHeader } from '@/widgets/site-header/ui/site-header'
 import { SiteFooter } from '@/widgets/site-footer/ui/site-footer'
 import { VariantGallery } from '@/widgets/variant-gallery/ui/variant-gallery'
 import { OrderForm } from '@/widgets/order-form/ui/order-form'
+import { PageTransition } from '@/shared/ui/page-transition'
 import { ShareButton } from '@/features/share-link/ui/share-button'
 import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -68,6 +69,7 @@ export default observer(function VariantPage() {
   )
 
   return (
+    <PageTransition data-page-wrapper>
     <div className="page-wrap bg-ink">
       <div className="grain-overlay" aria-hidden />
       <SiteHeader />
@@ -143,6 +145,6 @@ export default observer(function VariantPage() {
 
       <SiteFooter />
       <OrderForm />
-    </div>
+    </div></PageTransition>
   )
 })

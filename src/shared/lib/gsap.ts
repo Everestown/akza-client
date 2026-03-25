@@ -1,11 +1,62 @@
+/**
+ * GSAP + Lenis smooth scroll integration.
+ *
+ * Import everything from this module — not directly from gsap/lenis.
+ * This ensures ScrollTrigger always uses the Lenis scroll position.
+ */
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
 
 gsap.registerPlugin(ScrollTrigger)
 gsap.defaults({ ease: 'power3.out' })
 
+// ── Lenis singleton ───────────────────────────────────────────────────────────
+let lenis: Lenis | null = null
+
+export function initSmoothScroll(): () => void {
+  if (typeof window === 'undefined') return () => {}
+
+  // Destroy any existing instance (hot-reload safety)
+  if (lenis) { lenis.destroy(); lenis = null }
+
+  lenis = new Lenis({
+    duration: 1.1,
+    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    orientation: 'vertical',
+    smoothWheel: true,
+    wheelMultiplier: 0.85,
+    touchMultiplier: 1.6,
+  })
+
+  // Bridge Lenis → GSAP ScrollTrigger so all scroll animations use Lenis position
+  lenis.on('scroll', ScrollTrigger.update)
+
+  // Drive Lenis with GSAP ticker for perfect frame sync
+  const tickerFn = (time: number) => lenis?.raf(time * 1000)
+  gsap.ticker.add(tickerFn)
+  gsap.ticker.lagSmoothing(0)
+
+  return () => {
+    gsap.ticker.remove(tickerFn)
+    lenis?.destroy()
+    lenis = null
+  }
+}
+
+/** Scroll to a target element or position */
+export function scrollTo(target: string | number | HTMLElement, offset = 0) {
+  if (lenis) {
+    lenis.scrollTo(target, { offset, duration: 1.1 })
+  } else {
+    const el = typeof target === 'string' ? document.querySelector(target) : target
+    if (el instanceof Element) el.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
 export { gsap, ScrollTrigger }
 
+// ── Types ─────────────────────────────────────────────────────────────────────
 export interface ScrollRevealOptions {
   targets: string | Element | Element[]
   container?: Element | null
@@ -16,36 +67,25 @@ export interface ScrollRevealOptions {
   start?: string
 }
 
+// ── Scroll reveal helpers ─────────────────────────────────────────────────────
+
 /**
- * Bidirectional scroll reveal.
- * Enters viewport → plays (element appears).
- * Scrolls back up past trigger start → reverses (element hides).
- * 
+ * Bidirectional scroll reveal: appears on enter, hides on scroll back up.
  * toggleActions: 'play none none reverse'
- * - onEnter:     play   → show
- * - onLeave:     none   → stay visible (scrolled down past)
- * - onEnterBack: none   → stay visible (scrolled back into from top)
- * - onLeaveBack: reverse → hide (scrolled back up, element left view)
  */
-export function scrollReveal(
-  opts: ScrollRevealOptions | string,
-  legacyContainer?: Element | null,
-) {
+export function scrollReveal(opts: ScrollRevealOptions | string, legacyContainer?: Element | null) {
   const o: ScrollRevealOptions =
     typeof opts === 'string' ? { targets: opts, container: legacyContainer } : opts
 
-  const trigger =
-    o.container ??
-    (typeof o.targets === 'string'
-      ? (document.querySelector(o.targets) ?? undefined)
-      : undefined)
+  const trigger = o.container ?? (
+    typeof o.targets === 'string' ? (document.querySelector(o.targets) ?? undefined) : undefined
+  )
 
   return gsap.fromTo(
     o.targets,
     { opacity: 0, y: o.y ?? 40 },
     {
-      opacity: 1,
-      y: 0,
+      opacity: 1, y: 0,
       stagger: o.stagger ?? 0.08,
       duration: o.duration ?? 0.8,
       ease: 'power2.out',
@@ -58,26 +98,19 @@ export function scrollReveal(
   )
 }
 
-/** Bidirectional horizontal stagger reveal */
-export function scrollRevealX(
-  opts: ScrollRevealOptions | string,
-  legacyContainer?: Element | null,
-) {
+export function scrollRevealX(opts: ScrollRevealOptions | string, legacyContainer?: Element | null) {
   const o: ScrollRevealOptions =
     typeof opts === 'string' ? { targets: opts, container: legacyContainer } : opts
 
-  const trigger =
-    o.container ??
-    (typeof o.targets === 'string'
-      ? (document.querySelector(o.targets) ?? undefined)
-      : undefined)
+  const trigger = o.container ?? (
+    typeof o.targets === 'string' ? (document.querySelector(o.targets) ?? undefined) : undefined
+  )
 
   return gsap.fromTo(
     o.targets,
     { opacity: 0, x: o.x ?? -28 },
     {
-      opacity: 1,
-      x: 0,
+      opacity: 1, x: 0,
       stagger: o.stagger ?? 0.1,
       duration: o.duration ?? 0.65,
       ease: 'power2.out',
@@ -90,18 +123,13 @@ export function scrollRevealX(
   )
 }
 
-/** Bidirectional scale + fade reveal (for cards/images) */
 export function scrollRevealScale(selector: string, container?: Element | null) {
   return gsap.fromTo(
     selector,
     { opacity: 0, scale: 0.97, y: 20 },
     {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      stagger: 0.07,
-      duration: 0.7,
-      ease: 'power2.out',
+      opacity: 1, scale: 1, y: 0,
+      stagger: 0.07, duration: 0.7, ease: 'power2.out',
       scrollTrigger: {
         trigger: container ?? selector,
         start: 'top 88%',
@@ -111,7 +139,7 @@ export function scrollRevealScale(selector: string, container?: Element | null) 
   )
 }
 
-/** One-shot fade-in (no reverse — for hero/above-fold elements) */
+/** One-shot fade-in (hero elements, above fold) */
 export function fadeIn(el: Element | string, delay = 0) {
   return gsap.fromTo(
     el,
@@ -120,35 +148,22 @@ export function fadeIn(el: Element | string, delay = 0) {
   )
 }
 
-/** Hero title entrance (one-shot, no reverse) */
+/** Hero entrance (skewed, dramatic) */
 export function heroReveal(selector: string) {
   return gsap.fromTo(
     selector,
     { opacity: 0, y: 70, skewY: 3 },
-    {
-      opacity: 1,
-      y: 0,
-      skewY: 0,
-      stagger: 0.15,
-      duration: 1.1,
-      ease: 'expo.out',
-      delay: 0.15,
-    },
+    { opacity: 1, y: 0, skewY: 0, stagger: 0.15, duration: 1.1, ease: 'expo.out', delay: 0.15 },
   )
 }
 
-/** Clip-path curtain reveal for images (one-shot) */
+/** Clip-path curtain reveal (images) */
 export function curtainReveal(el: Element | string, delay = 0) {
   return gsap.fromTo(
     el,
     { clipPath: 'inset(100% 0 0 0)' },
     { clipPath: 'inset(0% 0 0 0)', duration: 1.2, ease: 'expo.inOut', delay },
   )
-}
-
-/** Page leave transition */
-export function pageOut(el: Element, onComplete: () => void) {
-  gsap.to(el, { opacity: 0, y: -10, duration: 0.2, ease: 'power2.in', onComplete })
 }
 
 /** Countdown digit bounce */
@@ -160,4 +175,22 @@ export function animateDigit(el: Element | null) {
 /** Refresh all ScrollTriggers after layout change */
 export function refreshScrollTriggers() {
   ScrollTrigger.refresh()
+}
+
+/** Page enter animation — used by PageTransition component */
+export function pageEnter(el: Element, onComplete?: () => void) {
+  return gsap.fromTo(
+    el,
+    { opacity: 0, y: 24 },
+    { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out', clearProps: 'all', onComplete },
+  )
+}
+
+/** Page leave animation — brief fade out before navigation */
+export function pageLeave(el: Element, onComplete: () => void) {
+  return gsap.to(el, {
+    opacity: 0, y: -16,
+    duration: 0.22, ease: 'power2.in',
+    onComplete,
+  })
 }

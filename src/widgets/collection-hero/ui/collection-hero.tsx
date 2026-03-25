@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { gsap, heroReveal, curtainReveal } from '@/shared/lib/gsap'
+import { SafeImage, SafeMedia } from '@/shared/ui/safe-media'
 import type { Collection } from '@/entities/collection/types/collection.types'
 
 interface Props { collection: Collection }
@@ -39,19 +40,15 @@ export function CollectionHero({ collection }: Props) {
 
   return (
     <div ref={containerRef} className="relative h-[92vh] flex items-end overflow-hidden">
-      {/* Background image with parallax */}
+      {/* Background image/video with parallax */}
       <div ref={imageRef} className="hero-image-wrap absolute inset-0">
-        {collection.cover_url ? (
-          <img
-            src={collection.cover_url}
-            alt={collection.title}
-            className="hero-image w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-ash flex items-center justify-center">
-            <span className="jp text-coal text-8xl">アクザ</span>
-          </div>
-        )}
+        <SafeMedia
+          src={collection.cover_url}
+          type="auto"
+          alt={collection.title}
+          className="hero-image w-full h-full object-cover"
+          fallbackClassName="w-full h-full bg-ash flex items-center justify-center"
+        />
         {/* Dark gradient from bottom */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
       </div>

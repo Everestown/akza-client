@@ -1,8 +1,8 @@
 import type { Variant } from '@/entities/variant/types/variant.types'
 
 export interface Product {
-  id: string
-  collection_id: string
+  id: number
+  collection_id: number
   slug: string
   title: string
   description: string | null

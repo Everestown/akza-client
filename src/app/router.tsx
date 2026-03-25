@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, ScrollRestoration, Outlet } from 'react-router-dom'
 import { Spinner } from '@/shared/ui/spinner'
+import { SmoothScrollProvider } from './providers/smooth-scroll'
 
 const HomePage       = lazy(() => import('@/pages/home'))
 const CollectionPage = lazy(() => import('@/pages/collection'))
@@ -16,53 +17,45 @@ function Loading() {
   )
 }
 
-// ScrollRestoration is part of react-router-dom v6.4+
-// It persists scroll positions per route key (back/forward navigation)
+/**
+ * Root layout — wraps all routes.
+ * SmoothScrollProvider lives here so Lenis persists across navigations.
+ * ScrollRestoration is here once (not per-route) to prevent duplication.
+ */
+function RootLayout() {
+  return (
+    <SmoothScrollProvider>
+      <ScrollRestoration getKey={(l) => l.pathname} />
+      <Outlet />
+    </SmoothScrollProvider>
+  )
+}
+
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: (
-      <>
-        <ScrollRestoration
-          getKey={(location) => {
-            // Use pathname for scroll key so different query params share position
-            return location.pathname
-          }}
-        />
-        <Suspense fallback={<Loading />}><HomePage /></Suspense>
-      </>
-    ),
-  },
-  {
-    path: '/collections/:slug',
-    element: (
-      <>
-        <ScrollRestoration getKey={(l) => l.pathname} />
-        <Suspense fallback={<Loading />}><CollectionPage /></Suspense>
-      </>
-    ),
-  },
-  {
-    path: '/collections/:slug/:productSlug',
-    element: (
-      <>
-        <ScrollRestoration getKey={(l) => l.pathname} />
-        <Suspense fallback={<Loading />}><ProductPage /></Suspense>
-      </>
-    ),
-  },
-  {
-    path: '/collections/:slug/:productSlug/:variantSlug',
-    element: (
-      <>
-        <ScrollRestoration getKey={(l) => l.pathname} />
-        <Suspense fallback={<Loading />}><VariantPage /></Suspense>
-      </>
-    ),
-  },
-  {
-    path: '*',
-    element: <Suspense fallback={<Loading />}><NotFoundPage /></Suspense>,
+    element: <RootLayout />,
+    children: [
+      {
+        path: '/',
+        element: <Suspense fallback={<Loading />}><HomePage /></Suspense>,
+      },
+      {
+        path: '/collections/:slug',
+        element: <Suspense fallback={<Loading />}><CollectionPage /></Suspense>,
+      },
+      {
+        path: '/collections/:slug/:productSlug',
+        element: <Suspense fallback={<Loading />}><ProductPage /></Suspense>,
+      },
+      {
+        path: '/collections/:slug/:productSlug/:variantSlug',
+        element: <Suspense fallback={<Loading />}><VariantPage /></Suspense>,
+      },
+      {
+        path: '*',
+        element: <Suspense fallback={<Loading />}><NotFoundPage /></Suspense>,
+      },
+    ],
   },
 ])
 

@@ -5,6 +5,7 @@ import { SiteHeader } from '@/widgets/site-header/ui/site-header'
 import { SiteFooter } from '@/widgets/site-footer/ui/site-footer'
 import { CollectionHero } from '@/widgets/collection-hero/ui/collection-hero'
 import { OrderForm } from '@/widgets/order-form/ui/order-form'
+import { PageTransition } from '@/shared/ui/page-transition'
 import { Countdown } from '@/features/countdown-timer/ui/countdown'
 import { ProductCard } from '@/entities/product/ui/product-card'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -49,6 +50,7 @@ export default function CollectionPage() {
   const isScheduled = collection.status === 'SCHEDULED'
 
   return (
+    <PageTransition data-page-wrapper>
     <div className="page-wrap bg-ink">
       <div className="grain-overlay" aria-hidden />
       <SiteHeader />
@@ -102,6 +104,6 @@ export default function CollectionPage() {
 
       <SiteFooter />
       <OrderForm />
-    </div>
+    </div></PageTransition>
   )
 }

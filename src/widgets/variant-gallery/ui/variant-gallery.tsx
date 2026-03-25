@@ -1,25 +1,25 @@
 import { useEffect, useRef } from 'react'
 import { observer } from 'mobx-react-lite'
 import { gsap } from '@/shared/lib/gsap'
+import { SafeImage, MediaFallback } from '@/shared/ui/media-fallback'
+import { detectMediaType } from '@/shared/lib/media-validation'
 import { galleryStore } from '../model/use-gallery'
 import type { VariantImage } from '@/entities/variant/types/variant.types'
 
 interface Props { images: VariantImage[] }
 
 export const VariantGallery = observer(function VariantGallery({ images }: Props) {
-  const imgRef = useRef<HTMLImageElement>(null)
+  const mediaRef = useRef<HTMLDivElement>(null)
   const { activeIndex } = galleryStore
 
-  // GSAP crossfade on image change
   useEffect(() => {
-    if (!imgRef.current) return
-    gsap.fromTo(imgRef.current,
+    if (!mediaRef.current) return
+    gsap.fromTo(mediaRef.current,
       { opacity: 0, scale: 1.02 },
       { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out' },
     )
   }, [activeIndex])
 
-  // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') galleryStore.next(images.length)
@@ -29,68 +29,75 @@ export const VariantGallery = observer(function VariantGallery({ images }: Props
     return () => window.removeEventListener('keydown', handler)
   }, [images.length])
 
-  if (images.length === 0) {
+  if (!images.length) {
     return (
-      <div className="aspect-[3/4] bg-ash flex items-center justify-center">
-        <span className="jp text-smoke text-4xl">アクザ</span>
+      <div className="aspect-[3/4] bg-ash rounded-lg overflow-hidden">
+        <MediaFallback kind="image" />
       </div>
     )
   }
 
-  const active = images[activeIndex] ?? images[0]
+  const active = images[Math.min(activeIndex, images.length - 1)]!
+  const mediaType = detectMediaType(null, active.url)
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Main image */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-ash group">
-        <img
-          ref={imgRef}
-          src={active.url}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-
-        {/* Navigation areas */}
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={() => galleryStore.prev(images.length)}
-              className="absolute left-0 top-0 bottom-0 w-1/3 opacity-0"
-              aria-label="Предыдущее фото"
-            />
-            <button
-              onClick={() => galleryStore.next(images.length)}
-              className="absolute right-0 top-0 bottom-0 w-2/3 opacity-0"
-              aria-label="Следующее фото"
-            />
-          </>
-        )}
-
-        {/* Counter */}
-        {images.length > 1 && (
-          <div className="absolute bottom-4 right-4 flex items-center gap-1">
-            <span className="font-mono text-[10px] text-mist/60">
-              {String(activeIndex + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
-            </span>
-          </div>
+      {/* Main media */}
+      <div ref={mediaRef} className="aspect-[3/4] bg-ash rounded-lg overflow-hidden">
+        {mediaType === 'video' ? (
+          <video
+            src={active.url}
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none'
+              const parent = (e.target as HTMLElement).parentElement
+              if (parent) {
+                const fb = document.createElement('div')
+                fb.className = 'w-full h-full'
+                fb.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-coal text-smoke">Видео недоступно</div>'
+                parent.appendChild(fb)
+              }
+            }}
+          />
+        ) : (
+          <SafeImage
+            src={active.url}
+            alt={`Фото ${activeIndex + 1}`}
+            className="w-full h-full object-cover"
+            fallbackKind="image"
+          />
         )}
       </div>
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {images.map((img, i) => (
-            <button
-              key={img.id}
-              onClick={() => galleryStore.setActive(i)}
-              className={`shrink-0 w-14 h-14 overflow-hidden border transition-all duration-200 ${
-                i === activeIndex ? 'border-mist/50' : 'border-transparent opacity-50 hover:opacity-80'
-              }`}
-              aria-label={`Фото ${i + 1}`}
-            >
-              <img src={img.url} alt="" className="w-full h-full object-cover" />
-            </button>
-          ))}
+        <div className="flex gap-2 overflow-x-auto scrollbar-none">
+          {images.map((img, i) => {
+            const type = detectMediaType(null, img.url)
+            return (
+              <button
+                key={img.id}
+                onClick={() => galleryStore.setActive(i)}
+                className={`shrink-0 w-14 h-14 rounded overflow-hidden border-2 transition-colors ${
+                  i === activeIndex ? 'border-mist' : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
+              >
+                {type === 'video' ? (
+                  <div className="w-full h-full bg-coal flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M2 2l10 5-10 5V2z" fill="currentColor" className="text-smoke"/>
+                    </svg>
+                  </div>
+                ) : (
+                  <SafeImage src={img.url} alt="" className="w-full h-full object-cover" />
+                )}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
