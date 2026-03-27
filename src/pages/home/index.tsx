@@ -11,12 +11,18 @@ import { SocialLinks } from '@/shared/ui/social-links'
 
 export default function HomePage() {
   const { data, isLoading } = useCollections()
+  const { data: heroData     } = useSiteSection('HERO')
   const { data: aboutData    } = useSiteSection('ABOUT')
   const { data: contactsData } = useSiteSection('CONTACTS')
   const socialLinks = useSocialLinks()
   const heroRef  = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
   const collections = data?.data ?? []
+
+  // HERO section data from CMS (admin → API → client)
+  const heroTitle    = (heroData?.content?.title    as string | undefined) ?? 'AKZA'
+  const heroSubtitle = (heroData?.content?.subtitle as string | undefined) ?? 'Японская философия ваби-саби в мусульманской скромной моде, рождённая в Дагестане. Лимитированные тиражи.'
+  const heroVideoUrl = (heroData?.content?.video_url as string | undefined) ?? null
 
   // Dictionary-driven text (changes in one place → updates everywhere)
   const brandTagline = useDictionaryValue('brand_tagline', 'Видеть искусство в каждом стежке')
@@ -68,25 +74,27 @@ export default function HomePage() {
       <SiteHeader />
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="pt-28 pb-20 px-6 md:px-10 overflow-hidden">
-        <div className="max-w-6xl mx-auto">
+      <section ref={heroRef} className="pt-28 pb-20 px-6 md:px-10 overflow-hidden relative">
+        {/* Optional CMS background video */}
+        {heroVideoUrl && (
+          <video
+            src={heroVideoUrl}
+            autoPlay muted loop playsInline
+            className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+          />
+        )}
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-2 flex items-center gap-4">
             <div className="home-hero-line h-px bg-smoke flex-1 max-w-[80px]" />
             <span className="home-hero-sub section-tag">Makhachkala · Дагестан</span>
           </div>
           <h1 className="overflow-hidden mb-1">
             <span className="home-hero-title block font-display text-[clamp(56px,10vw,120px)] font-light text-mist leading-none tracking-tight">
-              AKZA
+              {heroTitle}
             </span>
           </h1>
-          <div className="overflow-hidden">
-            <p className="home-hero-title font-display text-[clamp(20px,4vw,44px)] font-light text-fog italic leading-none tracking-wide jp">
-              アクザ
-            </p>
-          </div>
           <p className="home-hero-sub mt-8 max-w-sm text-sm text-fog font-light leading-relaxed">
-            Японская философия ваби-саби в мусульманской скромной моде, рождённая в Дагестане.
-            Лимитированные тиражи.
+            {heroSubtitle}
           </p>
         </div>
       </section>
