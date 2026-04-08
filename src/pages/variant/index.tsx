@@ -125,13 +125,13 @@ export default observer(function VariantPage() {
               <div className="variant-cta border-t border-coal pt-6 flex flex-col gap-3" style={{ opacity: 0 }}>
                 <Button
                   variant="primary"
-                  className="w-full"
+                  className="w-full hover:bg-red active:bg-red"
                   onClick={() => orderForm.openFor(variant.id, variant.slug)}
                 >
                   Оставить заявку
                 </Button>
                 <p className="section-tag text-center text-fog/50">
-                  Ответим в Telegram в течение нескольких часов
+                  В скором времени ответим в Telegram
                 </p>
               </div>
 

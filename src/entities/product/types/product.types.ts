@@ -11,6 +11,7 @@ export interface Product {
   price_hidden: boolean
   cover_url: string | null
   sort_order: number
+  is_pinned: boolean
   is_published: boolean
   variants?: Variant[]
   created_at: string

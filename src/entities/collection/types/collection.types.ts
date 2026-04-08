@@ -9,6 +9,7 @@ export interface Collection {
   status: CollectionStatus
   scheduled_at: string | null
   is_pending: boolean
+  is_pinned: boolean
   sort_order: number
   created_at: string
   updated_at: string
