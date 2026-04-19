@@ -21,15 +21,15 @@ export default function HomePage() {
 
   // HERO section data from CMS (admin → API → client)
   const heroTitle    = (heroData?.content?.title    as string | undefined) ?? 'AKZA'
-  const heroSubtitle = (heroData?.content?.subtitle as string | undefined) ?? 'Философия ваби-саби в скромной моде, рождённая в Дагестане.'
+  const heroSubtitle = (heroData?.content?.subtitle as string | undefined) ?? 'Японская философия ваби-саби в мусульманской скромной моде, рождённая в Дагестане. Лимитированные тиражи.'
   const heroVideoUrl = (heroData?.content?.video_url as string | undefined) ?? null
 
   // Dictionary-driven text (changes in one place → updates everywhere)
   const brandTagline = useDictionaryValue('brand_tagline', 'Видеть искусство в каждом стежке')
 
   const aboutText = (aboutData?.content?.text as string | undefined)
-    ?? 'AKZA'
-  const address = (contactsData?.content?.address as string | undefined) ?? 'Махачкала'
+    ?? 'AKZA — независимый fashion-бренд, основанный в Махачкале. Каждая вещь создаётся в лимитированном тираже.'
+  const address = (contactsData?.content?.address as string | undefined) ?? 'Махачкала, ул. Толстого 5/1'
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -74,7 +74,7 @@ export default function HomePage() {
       <SiteHeader />
 
       {/* ── Hero ── */}
-      <section ref={heroRef} className="inset-shadow-bottom pt-36 pb-44 px-6 md:pt-44 md:pb-60 md:px-10 overflow-hidden relative">
+      <section ref={heroRef} className="pt-28 pb-20 px-6 md:px-10 overflow-hidden relative">
         {/* Optional CMS background video */}
         {heroVideoUrl && (
           <video
@@ -86,7 +86,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-2 flex items-center gap-4">
             <div className="home-hero-line h-px bg-smoke flex-1 max-w-[80px]" />
-            <span className="home-hero-sub section-tag">Makhachkala · Dagestan</span>
+            <span className="home-hero-sub section-tag">Makhachkala · Дагестан</span>
           </div>
           <h1 className="overflow-hidden mb-1">
             <span className="home-hero-title block font-display text-[clamp(56px,10vw,120px)] font-light text-mist leading-none tracking-tight">
@@ -149,7 +149,7 @@ export default function HomePage() {
             {/* Address — always shown separately */}
             {address && (
               <div className="about-link ruled pt-5" style={{ opacity: 0 }}>
-                <p className="section-tag mb-1">Адрес</p>
+                <p className="section-tag mb-1">Адрес шоурума</p>
                 <p className="text-fog text-sm">{address}</p>
               </div>
             )}

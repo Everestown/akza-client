@@ -1,6 +1,6 @@
 {
-  "version": "1.34.2",
-  "timestamp": "2026-04-08T14:38:37.765Z",
+  "version": "1.34.1",
+  "timestamp": "2026-04-06T20:37:30.520Z",
   "files": {
     "get-shit-done/bin/gsd-tools.cjs": "8c7813dec8628e47c196c2801251de0d6080111baf89c962454ce569957cd378",
     "get-shit-done/bin/lib/commands.cjs": "562f4894c94480ce248c909a98d630f9d9e255cc3fce6603d447515d892e19e5",
@@ -106,7 +106,7 @@
     "get-shit-done/templates/user-setup.md": "78b7d718b6e8d67c399aaa353ec84b4dcbd4ae5fb096476740f02b208df50c8f",
     "get-shit-done/templates/VALIDATION.md": "6144951011cdca57130bdd494bcaff845741568f16442dbffc129e7bda96158f",
     "get-shit-done/templates/verification-report.md": "df40f0c2f7dc0d35aec7b8023822541df4e072a368d2de99ba3382f93c0cd232",
-    "get-shit-done/VERSION": "ef3afc161b7b22605d04802ef5c8448df9fb68226784bb6d76dde299d384bff9",
+    "get-shit-done/VERSION": "5d339c0a32bec1b4ee718679e135e8ab787d2ddfc4fb762ba1f799a357205bcf",
     "get-shit-done/workflows/add-phase.md": "6e89ac5125a892b622ca301f4bc5451e0bf607dd030b55593caba511b956a570",
     "get-shit-done/workflows/add-tests.md": "96b55056f56b53c980275022e0c57e34eb036d5f5758893c2c965c9e11cb38eb",
     "get-shit-done/workflows/add-todo.md": "8ab3775dc4f40cd915a541b579fa25a397f532a81d5f10e5872918afe3f9c049",
@@ -199,14 +199,14 @@
     "agents/gsd-ui-researcher.md": "2eda58b710d2e2990525123ba591391c1d55a22f464150f8c3c40c81e620aeab",
     "agents/gsd-user-profiler.md": "fabbeacf5b9d541809eb78a0d52e43a09023cb86ed96638f653e26ab6d2b39c3",
     "agents/gsd-verifier.md": "49f812f8e28d1fb88d30e4bb8bed8a9f1466527c8ff7e3d25982d00680876e26",
-    "hooks/gsd-check-update.js": "373450862734fee2baeea6cfc379033132dbc84801a16a3b8494e2aba7165bca",
-    "hooks/gsd-context-monitor.js": "d1c175836437d14a82bc93fcc90b42f9a573e491d3f2b119f2f6b2710b240cf2",
+    "hooks/gsd-check-update.js": "1e6d261d0dc4d0f7fc0229a24783b08f87121d2e7cb8ab894594445205918b57",
+    "hooks/gsd-context-monitor.js": "b197d5db2b5b876ae9dd5deb60425fb56e51991641b641fe7978d79f7cba275a",
     "hooks/gsd-phase-boundary.sh": "6e15fd4919ac91bb9e5d6f810b0f788ed5eba125821d283a99d25c9ec411d7aa",
-    "hooks/gsd-prompt-guard.js": "c20524c50188ff7702314e8f80364fd84edb65ff03a9f2ed2a47fca9f11f8e28",
-    "hooks/gsd-read-guard.js": "5d57fa3835f4f41c68cd8c80c1cc0acab8a50dd9d99d92f19981c5062d0d26f2",
+    "hooks/gsd-prompt-guard.js": "713896f91471802567be7d81bc88d056d538c132e1d0ce64dd18b8d80a98bc7c",
+    "hooks/gsd-read-guard.js": "ba41ec06f64f1854e78689d3d33e68e51fd5e5322c5373886bbf708073e25edd",
     "hooks/gsd-session-state.sh": "1b8fa8cdcac0e2b7364543bd3b937ca4a2e5aa8253a5754efd0ee836b0946cf9",
-    "hooks/gsd-statusline.js": "32ecf694a42ae89e9895bfb57fe93e989ecd59011d33da9f98300ecfe756127c",
+    "hooks/gsd-statusline.js": "455642f4945d9d8e0df753f1674a1e310c8dfb8d380a3688cf4cfc87d1668cef",
     "hooks/gsd-validate-commit.sh": "1faac54d5fba92a5475cb2fa7787cdf68dcf26a7d596a0d3d2fe7af003166a75",
-    "hooks/gsd-workflow-guard.js": "d21c7f7b6a0d007d3d4feeb358d3240fdf47cfe80a81c230b1562b03d534cde2"
+    "hooks/gsd-workflow-guard.js": "cf84917d0c3b834beeeb0532ee0829b7ae023f7885b31796abd474f7a8565939"
   }
 }

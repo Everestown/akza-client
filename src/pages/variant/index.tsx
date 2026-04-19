@@ -11,15 +11,20 @@ import { PageTransition } from '@/shared/ui/page-transition'
 import { ShareButton } from '@/features/share-link/ui/share-button'
 import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { gsap, fadeIn, scrollReveal, scrollRevealX } from '@/shared/lib/gsap'
+import { gsap, fadeIn, scrollReveal } from '@/shared/lib/gsap'
 import { galleryStore } from '@/widgets/variant-gallery/model/use-gallery'
+import { getMergedCharacteristics } from '@/entities/variant/types/variant.types'
 import { ROUTES } from '@/shared/config/routes'
+import type { CharGroup } from '@/entities/variant/types/variant.types'
 
 export default observer(function VariantPage() {
   const { slug: collectionSlug, productSlug, variantSlug } = useParams<{
     slug: string; productSlug: string; variantSlug: string
   }>()
   const { data: variant, isLoading } = useVariant(variantSlug!)
+
+  // Sprint 4: product_characteristics comes directly from API (preloaded on FindBySlug)
+  const mergedChars: CharGroup[] = variant ? getMergedCharacteristics(variant) : []
   const { orderForm } = useStore()
   const infoRef = useRef<HTMLDivElement>(null)
 
@@ -100,7 +105,28 @@ export default observer(function VariantPage() {
                 <p className="font-mono text-sm text-fog">{variant.slug}</p>
               </div>
 
-              {/* Attributes — bidirectional */}
+              {/* Characteristics — product groups first, then variant groups (Sprint 4) */}
+              {mergedChars.length > 0 && (
+                <div className="border-t border-coal pt-5 flex flex-col gap-4">
+                  {mergedChars.map(group => (
+                    <div key={group.id}>
+                      {group.name && group.name !== 'Характеристики' && (
+                        <p className="section-tag mb-2 text-fog/60">{group.name}</p>
+                      )}
+                      <div className="flex flex-col gap-2">
+                        {group.items.map(item => (
+                          <div key={item.id} className="attr-row flex justify-between" style={{ opacity: 0 }}>
+                            <span className="section-tag">{item.key}</span>
+                            <span className="text-sm text-fog">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Attributes (size/color etc) */}
               {Object.keys(variant.attributes ?? {}).length > 0 && (
                 <div className="border-t border-coal pt-5">
                   <p className="section-tag mb-3">Атрибуты</p>
@@ -125,13 +151,13 @@ export default observer(function VariantPage() {
               <div className="variant-cta border-t border-coal pt-6 flex flex-col gap-3" style={{ opacity: 0 }}>
                 <Button
                   variant="primary"
-                  className="w-full hover:bg-red active:bg-red"
+                  className="w-full"
                   onClick={() => orderForm.openFor(variant.id, variant.slug)}
                 >
                   Оставить заявку
                 </Button>
                 <p className="section-tag text-center text-fog/50">
-                  В скором времени ответим в Telegram
+                  Ответим в Telegram в течение нескольких часов
                 </p>
               </div>
 

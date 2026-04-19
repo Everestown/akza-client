@@ -97,6 +97,13 @@ export default observer(function ProductPage() {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
   const [activeImg, setActiveImg] = useState(0)
   const [lightboxImg, setLightboxImg] = useState<number | null>(null)
+
+  // Auto-select first variant when variants load (fix: п.4)
+  useEffect(() => {
+    if (variants.length > 0 && !selectedVariant) {
+      setSelectedVariant(variants[0])
+    }
+  }, [variants, selectedVariant])
   const infoRef  = useRef<HTMLDivElement>(null)
 
   // Gallery images: selected variant images, fallback to product cover
@@ -341,18 +348,24 @@ export default observer(function ProductPage() {
             </p>
           </div>
 
-          {/* Characteristics */}
-          {Object.keys(product.characteristics ?? {}).length > 0 && (
-            <div className="mt-6 border-t border-coal pt-5">
-              <p className="section-tag mb-3">Характеристики</p>
-              <div className="flex flex-col gap-2.5">
-                {Object.entries(product.characteristics).map(([k, v]) => (
-                  <div key={k} className="char-row flex justify-between py-1 border-b border-coal/50 last:border-0" style={{ opacity: 0 }}>
-                    <span className="section-tag">{k}</span>
-                    <span className="text-sm text-fog">{String(v)}</span>
+          {/* Characteristics — CharGroup structure (Sprint 4) */}
+          {Array.isArray(product.characteristics) && product.characteristics.length > 0 && (
+            <div className="mt-6 border-t border-coal pt-5 flex flex-col gap-4">
+              {product.characteristics.map(group => (
+                <div key={group.id}>
+                  {group.name && (
+                    <p className="section-tag mb-2 text-fog/60">{group.name}</p>
+                  )}
+                  <div className="flex flex-col gap-1.5">
+                    {(group.items ?? []).map(item => (
+                      <div key={item.id} className="char-row flex justify-between py-1 border-b border-coal/50 last:border-0" style={{ opacity: 0 }}>
+                        <span className="section-tag">{item.key}</span>
+                        <span className="text-sm text-fog">{item.value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
 

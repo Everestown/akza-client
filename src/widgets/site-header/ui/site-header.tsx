@@ -12,7 +12,9 @@ import { gsap } from '@/shared/lib/gsap'
 const DEFAULT_NAV = [
   { label: 'Коллекции', href: '/',         external: false },
   { label: 'О бренде',  href: '/#about',   external: false },
+  { label: 'Telegram',  href: 'https://t.me/theakza', external: true },
 ]
+
 
 // ── Animated mobile nav overlay ──────────────────────────────────────────────
 interface MobileNavProps {
@@ -51,7 +53,7 @@ function MobileNav({ isOpen, navLinks, socialLinks, renderLink }: MobileNavProps
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-30 bg-ink/90 backdrop-blur-md flex flex-col justify-center px-10 md:hidden"
+      className="fixed inset-0 z-30 bg-ink/98 flex flex-col justify-center px-10 md:hidden"
       style={{ opacity: 0 }}
     >
       <nav className="flex flex-col gap-8 mb-16">
@@ -170,7 +172,7 @@ export const SiteHeader = observer(function SiteHeader() {
         className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-10 h-14"
         style={{ willChange: 'transform' }}
       >
-        <div className="absolute inset-0 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-ink/80 backdrop-blur-md" />
 
         {/* Logo */}
         <Link ref={logoRef} to={ROUTES.HOME} className="relative z-10 flex items-center gap-2.5 group" style={{ opacity: 0 }}>

@@ -1,4 +1,4 @@
-import type { Variant } from '@/entities/variant/types/variant.types'
+import type { Variant, CharGroup } from '@/entities/variant/types/variant.types'
 
 export interface Product {
   id: number
@@ -6,7 +6,7 @@ export interface Product {
   slug: string
   title: string
   description: string | null
-  characteristics: Record<string, string>
+  characteristics: CharGroup[]
   price: number
   price_hidden: boolean
   cover_url: string | null

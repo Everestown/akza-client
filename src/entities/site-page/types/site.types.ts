@@ -1,4 +1,4 @@
-export type PageSection = 'HERO' | 'ABOUT' | 'CONTACTS' | 'FOOTER' | 'HEADER'
+export type PageSection = 'HERO' | 'ABOUT' | 'CONTACTS' | 'FOOTER' | 'HEADER' | 'DICTIONARY'
 
 export interface SitePage {
   id: number

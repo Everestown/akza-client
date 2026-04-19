@@ -7,7 +7,6 @@
     "dev": "vite --port 5173",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "host": "vite --host",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -41,7 +40,6 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
-    "context7": "^1.0.3",
     "postcss": "^8.4.38",
     "storybook": "^8.0.6",
     "tailwindcss": "^3.4.3",
