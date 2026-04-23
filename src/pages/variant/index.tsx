@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/shared/api/instance'
 import { observer } from 'mobx-react-lite'
 import { useVariant } from '@/entities/variant/model/use-variant'
 import { useStore } from '@/app/stores/store.context'
@@ -16,6 +18,70 @@ import { galleryStore } from '@/widgets/variant-gallery/model/use-gallery'
 import { getMergedCharacteristics } from '@/entities/variant/types/variant.types'
 import { ROUTES } from '@/shared/config/routes'
 import type { CharGroup } from '@/entities/variant/types/variant.types'
+
+
+// Size grid modal component (1.14)
+function SizeGridModal({ sizeGridId, customGrid }: {
+  sizeGridId: number | null
+  customGrid: { columns: string[]; rows: Record<string, string | number>[] } | null
+}) {
+  const [open, setOpen] = useState(false)
+  const { data: grid } = useQuery({
+    queryKey: ['size-grid', sizeGridId],
+    queryFn: () => api.get<{ data: { columns: string[]; rows: Record<string, string | number>[] } }>(`/size-grids/${sizeGridId}`).then(r => r.data.data),
+    enabled: open && !!sizeGridId,
+  })
+  const displayGrid = customGrid ?? grid
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)}
+        className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-smoke hover:text-fog transition-colors">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round">
+          <rect x="1" y="1" width="12" height="12" rx="1"/>
+          <line x1="1" y1="5" x2="13" y2="5"/>
+          <line x1="1" y1="9" x2="13" y2="9"/>
+          <line x1="5" y1="1" x2="5" y2="13"/>
+        </svg>
+        Размерная сетка
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 bg-ink/90 flex items-center justify-center p-6" onClick={() => setOpen(false)}>
+          <div className="bg-coal border border-smoke/20 rounded p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="section-tag">Размерная сетка</p>
+              <button onClick={() => setOpen(false)} className="text-smoke hover:text-fog">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+            {displayGrid ? (
+              <div className="overflow-x-auto">
+                <table className="text-xs w-full border-collapse">
+                  <thead>
+                    <tr>{displayGrid.columns.map(col => (
+                      <th key={col} className="px-3 py-2 text-left text-smoke border border-smoke/20 whitespace-nowrap">{col}</th>
+                    ))}</tr>
+                  </thead>
+                  <tbody>
+                    {displayGrid.rows.map((row, i) => (
+                      <tr key={i} className="hover:bg-ash/20">
+                        {displayGrid!.columns.map(col => (
+                          <td key={col} className="px-3 py-1.5 border border-smoke/20 text-fog">{String(row[col] ?? '')}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-smoke text-sm">Загрузка...</p>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
 export default observer(function VariantPage() {
   const { slug: collectionSlug, productSlug, variantSlug } = useParams<{
@@ -147,12 +213,21 @@ export default observer(function VariantPage() {
                 </div>
               )}
 
+
+              {/* 1.14: Size grid button */}
+              {variant.size_grid_mode !== 'NONE' && variant.show_size_grid && (
+                <SizeGridModal
+                  sizeGridId={variant.size_grid_id}
+                  customGrid={variant.custom_size_grid}
+                />
+              )}
+
               {/* CTA */}
               <div className="variant-cta border-t border-coal pt-6 flex flex-col gap-3" style={{ opacity: 0 }}>
                 <Button
                   variant="primary"
                   className="w-full"
-                  onClick={() => orderForm.openFor(variant.id, variant.slug)}
+                  onClick={() => orderForm.openFor(String(variant.id), variant.slug)}
                 >
                   Оставить заявку
                 </Button>

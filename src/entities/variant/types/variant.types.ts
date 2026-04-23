@@ -9,12 +9,18 @@ export interface VariantImage {
   created_at: string
 }
 
+export interface SizeGridData {
+  columns: string[]
+  rows: Record<string, string | number>[]
+}
+
 // Sprint 4: characteristics groups
 export interface CharItem {
   id: string
   key: string
   value: string
   sort: number
+  is_hidden?: boolean
 }
 
 export interface CharGroup {
@@ -22,6 +28,7 @@ export interface CharGroup {
   name: string
   sort: number
   items: CharItem[]
+  is_hidden?: boolean
 }
 
 export interface Variant {
@@ -40,6 +47,8 @@ export interface Variant {
   price_hidden: boolean | null
   description: string | null
   size_grid_id: number | null
+  size_grid_mode: 'NONE' | 'TEMPLATE' | 'CUSTOM'
+  custom_size_grid: SizeGridData | null
   show_price: boolean
   show_description: boolean
   show_size_grid: boolean
@@ -69,7 +78,16 @@ export function getEffectivePriceHidden(variant: Variant, productHidden: boolean
 
 /** Merge product+variant characteristics: product groups first, then variant groups */
 export function getMergedCharacteristics(variant: Variant): CharGroup[] {
-  const productChars = variant.product_characteristics ?? []
-  const variantChars = variant.characteristics ?? []
-  return [...productChars, ...variantChars]
+  const productChars = Array.isArray(variant.product_characteristics)
+    ? variant.product_characteristics
+    : []
+
+  const variantChars = Array.isArray(variant.characteristics)
+    ? variant.characteristics
+    : []
+
+  const all = [...productChars, ...variantChars]
+  return all
+    .filter(g => !g.is_hidden)
+    .map(g => ({ ...g, items: (g.items ?? []).filter(i => !i.is_hidden) }))
 }
